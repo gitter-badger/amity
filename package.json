@@ -1,13 +1,13 @@
 {
   "name": "amity",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Amity serverless project management tool",
   "main": "amity.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "test": "jasmine-node test/"
+    "test": "gulp test"
   },
   "keywords": [
     "amity",
@@ -19,7 +19,9 @@
   "license": "Copyright Neosperience 2015",
   "devDependencies": {
     "gulp": "^3.9.0",
-    "gulp-util": "^3.0.7"
+    "gulp-jasmine-node": "^1.0.3",
+    "gulp-util": "^3.0.7",
+    "jasmine-node": "^1.14.5"
   },
   "dependencies": {
     "lodash": "^3.10.1"
