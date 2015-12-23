@@ -59,6 +59,15 @@ describe("Amity.patterns", function() {
 
 
         });
+
+        describe("returns a pattern for tests", function(){
+            it("that matches specs",function(){
+                var p = amity.patterns.getTestsPattern();
+                var pattern = "/**/*[S|s]pec.js";
+
+                expect(p.substr(p.length-pattern.length)).toBe(pattern);
+            });
+        });
     });
 
 

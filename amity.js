@@ -12,14 +12,16 @@ var Amity = function() {
 
         this.readyToPackage = this.dist + "/dev";
         this.readyToUpload = this.dist + "/prod";
+
+        this.getLambdaFunctions = function(dir) {
+            return fs.readdirSync(dir)
+                .filter(function(file) {
+                    return fs.statSync(path.join(dir, file)).isDirectory();
+                });
+        };
+
     };
 
-    this.getLambdaFunctions = function(dir) {
-        return fs.readdirSync(dir)
-            .filter(function(file) {
-                return fs.statSync(path.join(dir, file)).isDirectory();
-            });
-    };
 
 
     var Patterns = function(baseFolders) {
