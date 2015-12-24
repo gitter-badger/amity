@@ -1,5 +1,6 @@
 "use strict";
 var fs = require("fs");
+var path = require("path");
 
 var Amity = function() {
 
@@ -8,6 +9,7 @@ var Amity = function() {
         this.cloud = "cloud";
         this.lambda = this.code + "/lambda";
         this.webapp = this.code + "/web";
+        this.test = "test";
         this.dist = "dist";
 
         this.readyToPackage = this.dist + "/dev";
@@ -20,8 +22,27 @@ var Amity = function() {
                 });
         };
 
-    };
+        this.setupProjectFolders = function(baseDir) {
+            if (baseDir === undefined) baseDir = "./";
+            var directories = [
+                path.join(baseDir, this.code),
+                path.join(baseDir, this.cloud),
+                path.join(baseDir, this.lambda),
+                path.join(baseDir, this.webapp),
+                path.join(baseDir, this.test),
+                path.join(baseDir, this.dist)
+            ];
 
+            directories.forEach(function(element) {
+                try {
+                    fs.mkdirSync(element);
+                }catch (e) {
+                    if ( e.code != 'EEXIST' ) throw e;
+                }
+            });
+        };
+
+    };
 
 
     var Patterns = function(baseFolders) {

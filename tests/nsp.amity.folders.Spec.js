@@ -13,13 +13,43 @@ describe("Amity.folders", function() {
             expect(amity.folders).toBeDefined();
         });
 
-        it("retrives the names of functions in a lambda folder", function() {
-            var fixture = "fixtures/folders";
-            console.log("DDDDD "+__dirname + " " + names);
+        describe("has a method", function() {
+            it("to retrieve the names of functions in a lambda folder", function() {
+                var fixture = __dirname + "/fixtures/folders";
 
-            var names = amity.folders.getLambdaFunctions(fixture);
-            //expect(names).toContain("nsp-test-func-01");
-            //expect(names).toContain("nsp-test-func-02");
+                var names = amity.folders.getLambdaFunctions(fixture);
+                expect(names).toContain("nsp-test-func-01");
+                expect(names).toContain("nsp-test-func-02");
+            });
+
+            describe("to setup project folders", function() {
+                var fs = require("fs");
+                var rimraf = require("rimraf");
+                var basePath = __dirname + "/testFolderCreation";
+
+                beforeEach(function(){
+                    try {
+                        fs.mkdirSync(basePath);
+                    } catch (e) {
+                        if (e.code != 'EEXIST') throw e;
+                    }
+                });
+
+                it("within a base path", function(){
+                    amity.folders.setupProjectFolders(basePath);
+                    expect(fs.existsSync(basePath + "/" + amity.folders.code)).toBeTruthy();
+                    expect(fs.existsSync(basePath + "/" + amity.folders.cloud)).toBeTruthy();
+                    expect(fs.existsSync(basePath + "/" + amity.folders.dist)).toBeTruthy();
+                    expect(fs.existsSync(basePath + "/" + amity.folders.test)).toBeTruthy();
+                    expect(fs.existsSync(basePath + "/" + amity.folders.lambda)).toBeTruthy();
+                    expect(fs.existsSync(basePath + "/" + amity.folders.webapp)).toBeTruthy();
+                });
+
+                afterEach(function(){
+                    rimraf(basePath,{},function(){});
+                });
+            });
+
         });
 
 
