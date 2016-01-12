@@ -4,7 +4,8 @@ var path = require("path");
 
 var Amity = function() {
 
-    var Folders = function() {
+    var Folders = function(baseDir) {
+        this.baseDir = baseDir !== undefined ? baseDir : "./";
         this.code = "code";
         this.cloud = "cloud";
         this.lambda = this.code + "/lambda";
@@ -22,15 +23,14 @@ var Amity = function() {
                 });
         };
 
-        this.setupProjectFolders = function(baseDir) {
-            if (baseDir === undefined) baseDir = "./";
+        this.setupProjectFolders = function() {
             var directories = [
-                path.join(baseDir, this.code),
-                path.join(baseDir, this.cloud),
-                path.join(baseDir, this.lambda),
-                path.join(baseDir, this.webapp),
-                path.join(baseDir, this.test),
-                path.join(baseDir, this.dist)
+                path.join(this.baseDir, this.code),
+                path.join(this.baseDir, this.cloud),
+                path.join(this.baseDir, this.lambda),
+                path.join(this.baseDir, this.webapp),
+                path.join(this.baseDir, this.test),
+                path.join(this.baseDir, this.dist)
             ];
 
             directories.forEach(function(element) {
@@ -45,14 +45,14 @@ var Amity = function() {
     };
 
 
-    var Patterns = function(baseFolders) {
-
+    var Patterns = function(baseFolder) {
+        this.baseFolder = baseFolder;
         this.getAllPattern = function() {
             return "/**/*";
         };
 
         this.getLambdaPattern = function(functionFolder, excludeTests) {
-            var path = functionFolder !== undefined ? functionFolder : baseFolders;
+            var path = functionFolder !== undefined ? functionFolder : this.baseFolder;
 
             excludeTests = excludeTests !== undefined ? excludeTests : false;
             var pattern = [
@@ -74,7 +74,8 @@ var Amity = function() {
             return pattern;
         };
         this.getTestsPattern = function() {
-            return baseFolders.lambda + "/**/*[S|s]pec.js"
+
+            return this.baseFolder + "/**/*[S|s]pec.js"
         };
     };
 
