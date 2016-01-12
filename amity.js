@@ -1,8 +1,27 @@
 "use strict";
 var fs = require("fs");
 var path = require("path");
+var _ = require("lodash");
 
-var Amity = function() {
+var DynamoDBManager = require("./managers/DynamoDBManager.js");
+var S3Manager = require("./managers/S3Manager.js");
+
+/**
+ * Amity Serverless project management tool.
+ * @module
+ */
+
+/**
+ * Some definitions useful to manage cloud resources
+ */
+
+
+
+/**
+ *
+ * @class
+ */
+var Amity = function(amityConfig) {
 
     var Folders = function(baseDir) {
         this.baseDir = baseDir !== undefined ? baseDir : "./";
@@ -36,8 +55,8 @@ var Amity = function() {
             directories.forEach(function(element) {
                 try {
                     fs.mkdirSync(element);
-                }catch (e) {
-                    if ( e.code != 'EEXIST' ) throw e;
+                } catch (e) {
+                    if (e.code != 'EEXIST') throw e;
                 }
             });
         };
@@ -81,10 +100,17 @@ var Amity = function() {
 
 
     this.folders = new Folders();
-
     this.patterns = new Patterns(this.folders.lambda);
+
+    this.init = function() {
+
+    };
+
+    this.setupCloud = function() {
+
+    };
 };
 
-Amity.version = "0.0.1";
+Amity.version = "0.2.0";
 
 module.exports = Amity;
