@@ -2,26 +2,38 @@
 var fs = require("fs");
 var path = require("path");
 var _ = require("lodash");
+var AWS = require("aws-sdk");
 
-var DynamoDBManager = require("./managers/DynamoDBManager.js");
-var S3Manager = require("./managers/S3Manager.js");
+var DynamoDBManager = require("./aws/managers/DynamoDBManager");
+var S3Manager = require("./aws/managers/S3Manager");
 
 /**
  * Amity Serverless project management tool.
  * @module
  */
 
+
+
 /**
- * Some definitions useful to manage cloud resources
+ * Amity configuration object
+ * @typedef     {object}        AmityConfig
+ * @property    awsAccountId    {string}    AWS Account id to be used for operations and ARN construction. If not provided, defaults to AWS standard
+ * @property    name            {string}    Project name. If not provided, it is detected from NPM paclage.json "name" attribute.
+ * @property    version         {string}    Project version. If not provided, it is detected from NPM paclage.json "version" attribute.
+ * @property    description     {string}    Project description. If not provided, it is detected from NPM paclage.json "description" attribute.
+ * @property    resources       {object}    Collection of resources to be managed by Amity. It contains an entry for every AWS service with an array of object corresponding to resource configuration
+ * @property    resources.dynamodb  {Array.<DynamoDBTable>} Collection of DynamoDBTable representing tables to be created into AWS account
+ * @property    resources.s3        {Array.<S3Bucket>}      Collection of S3Bucket representing buckets to be created into AWS account
+ * @property    resources.sns       {Array.<S3Bucket>}      Collection of S3Bucket representing buckets to be created into AWS account
  */
-
-
 
 /**
  *
  * @class
  */
 var Amity = function(amityConfig) {
+
+
 
     var Folders = function() {
         this.code = "code";
@@ -62,8 +74,6 @@ var Amity = function(amityConfig) {
         };
 
     };
-
-
     var Patterns = function(baseFolders) {
 
         this.getAllPattern = function() {
