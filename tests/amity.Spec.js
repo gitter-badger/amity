@@ -1,5 +1,5 @@
 "use strict";
-var version = "0.0.1";
+var version = "0.2.0";
 
 describe("Amity", function() {
     var Amity;

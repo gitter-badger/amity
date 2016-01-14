@@ -2,20 +2,30 @@
 var fs = require("fs");
 var path = require("path");
 var _ = require("lodash");
+var AWS = require("aws-sdk");
 
-var DynamoDBManager = require("./managers/DynamoDBManager.js");
-var S3Manager = require("./managers/S3Manager.js");
+var DynamoDBManager = require("./aws/managers/DynamoDBManager");
+var S3Manager = require("./aws/managers/S3Manager");
 
 /**
  * Amity Serverless project management tool.
  * @module
  */
 
+
+
 /**
- * Some definitions useful to manage cloud resources
+ * Amity configuration object
+ * @typedef     {object}        AmityConfig
+ * @property    awsAccountId    {string}    AWS Account id to be used for operations and ARN construction. If not provided, defaults to AWS standard
+ * @property    name            {string}    Project name. If not provided, it is detected from NPM paclage.json "name" attribute.
+ * @property    version         {string}    Project version. If not provided, it is detected from NPM paclage.json "version" attribute.
+ * @property    description     {string}    Project description. If not provided, it is detected from NPM paclage.json "description" attribute.
+ * @property    resources       {object}    Collection of resources to be managed by Amity. It contains an entry for every AWS service with an array of object corresponding to resource configuration
+ * @property    resources.dynamodb  {Array.<DynamoDBTable>} Collection of DynamoDBTable representing tables to be created into AWS account
+ * @property    resources.s3        {Array.<S3Bucket>}      Collection of S3Bucket representing buckets to be created into AWS account
+ * @property    resources.sns       {Array.<S3Bucket>}      Collection of S3Bucket representing buckets to be created into AWS account
  */
-
-
 
 /**
  *
@@ -23,8 +33,9 @@ var S3Manager = require("./managers/S3Manager.js");
  */
 var Amity = function(amityConfig) {
 
-    var Folders = function(baseDir) {
-        this.baseDir = baseDir !== undefined ? baseDir : "./";
+
+
+    var Folders = function() {
         this.code = "code";
         this.cloud = "cloud";
         this.lambda = this.code + "/lambda";
@@ -42,14 +53,15 @@ var Amity = function(amityConfig) {
                 });
         };
 
-        this.setupProjectFolders = function() {
+        this.setupProjectFolders = function(baseDir) {
+            if (baseDir === undefined) baseDir = "./";
             var directories = [
-                path.join(this.baseDir, this.code),
-                path.join(this.baseDir, this.cloud),
-                path.join(this.baseDir, this.lambda),
-                path.join(this.baseDir, this.webapp),
-                path.join(this.baseDir, this.test),
-                path.join(this.baseDir, this.dist)
+                path.join(baseDir, this.code),
+                path.join(baseDir, this.cloud),
+                path.join(baseDir, this.lambda),
+                path.join(baseDir, this.webapp),
+                path.join(baseDir, this.test),
+                path.join(baseDir, this.dist)
             ];
 
             directories.forEach(function(element) {
@@ -62,16 +74,14 @@ var Amity = function(amityConfig) {
         };
 
     };
+    var Patterns = function(baseFolders) {
 
-
-    var Patterns = function(baseFolder) {
-        this.baseFolder = baseFolder;
         this.getAllPattern = function() {
             return "/**/*";
         };
 
         this.getLambdaPattern = function(functionFolder, excludeTests) {
-            var path = functionFolder !== undefined ? functionFolder : this.baseFolder;
+            var path = functionFolder !== undefined ? functionFolder : baseFolders;
 
             excludeTests = excludeTests !== undefined ? excludeTests : false;
             var pattern = [
@@ -93,8 +103,7 @@ var Amity = function(amityConfig) {
             return pattern;
         };
         this.getTestsPattern = function() {
-
-            return this.baseFolder + "/**/*[S|s]pec.js"
+            return baseFolders.lambda + "/**/*[S|s]pec.js"
         };
     };
 
