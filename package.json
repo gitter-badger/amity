@@ -17,6 +17,7 @@
   ],
   "author": "Luca Bianchi <bianchi.luca@gmail.com> (http://github.com/aletheia)",
   "license": "Copyright Neosperience 2015",
+  "repository": "https://github.com/aletheia/amity.git",
   "devDependencies": {
     "del": "^2.2.0",
     "gulp": "^3.9.0",

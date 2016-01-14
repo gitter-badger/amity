@@ -5,7 +5,7 @@ describe("Amity.folders", function() {
     var amity;
 
     beforeEach(function() {
-        Amity = require("../amity.js");
+        Amity = require("../src/amity.js");
         amity = new Amity();
     });
     describe("have a folders object that", function() {

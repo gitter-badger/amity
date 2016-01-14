@@ -1,0 +1,20 @@
+{
+  "project": {
+    "name": "luga-showreel-services",
+    "version": "0.2.0",
+    "description": "AWS services for LugaJS Showreel app"
+  },
+  "resources": {
+    "dynamodb": [],
+    "s3": [],
+    "sns": [],
+    "iam": []
+  },
+  "code": {
+    "lambda": []
+  },
+  "api": {
+    "definitions": [],
+    "models": []
+  }
+}

@@ -2,7 +2,7 @@
 
 describe("Amity AWS Resources", function() {
     describe("AWSResource", function() {
-        var AWSResource = require("../aws/resources/AWSResource.js");
+        var AWSResource = require("../src/aws/resources/AWSResource.js");
 
         it("cannot be initialized with an undefined config object.", function() {
             expect(function() {

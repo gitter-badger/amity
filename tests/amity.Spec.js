@@ -5,7 +5,7 @@ describe("Amity", function() {
     var Amity;
 
     beforeEach(function() {
-        Amity = require("../amity.js");
+        Amity = require("../src/amity.js");
     });
 
     describe("library is", function() {
