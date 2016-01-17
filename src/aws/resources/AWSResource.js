@@ -16,12 +16,11 @@ var _ = require("lodash");
  */
 var AWSResource = function(configObject) {
     _.merge(this, configObject);
-    console.log("Caller "+this.caller);
     if (!this.awsAccountId) throw new Error("AWS Account id not defined in configuration");
     if (!this.arn) {
         var arnTemplate = _.template(configObject.arnTemplate);
         var data = {
-            config:configObject
+            config: configObject
         };
         this.arn = arnTemplate(data);
     }
