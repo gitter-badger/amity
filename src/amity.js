@@ -1,8 +1,14 @@
 "use strict";
-var fs = require("fs");
-var path = require("path");
 var _ = require("lodash");
+var Promise = require("bluebird");
+var fs = Promise.promisifyAll(require("fs"));
+var path = Promise.promisifyAll(require("path"));
 var AWS = require("aws-sdk");
+
+var ValidatableObject = require("./utils/ValidatableObject");
+
+var Folders = require("./AmityProjectFolders");
+var Patterns = require("./AmityProjectPatterns");
 
 var DynamoDBManager = require("./aws/managers/DynamoDBManager");
 var S3Manager = require("./aws/managers/S3Manager");
@@ -12,7 +18,9 @@ var S3Manager = require("./aws/managers/S3Manager");
  * @module
  */
 
-
+var CONST = {
+    PROJECT_FILE: ".amity.project"
+};
 
 /**
  * Amity configuration object
@@ -31,92 +39,55 @@ var S3Manager = require("./aws/managers/S3Manager");
  *
  * @class
  */
-var Amity = function(amityConfig) {
+var Amity = function(startPath, amityConfig) {
 
-
-
-    var Folders = function() {
-        this.code = "code";
-        this.cloud = "cloud";
-        this.lambda = this.code + "/lambda";
-        this.webapp = this.code + "/web";
-        this.test = "test";
-        this.dist = "dist";
-
-        this.readyToPackage = this.dist + "/dev";
-        this.readyToUpload = this.dist + "/prod";
-
-        this.getLambdaFunctions = function(dir) {
-            return fs.readdirSync(dir)
-                .filter(function(file) {
-                    return fs.statSync(path.join(dir, file)).isDirectory();
-                });
-        };
-
-        this.setupProjectFolders = function(baseDir) {
-            if (baseDir === undefined) baseDir = "./";
-            var directories = [
-                path.join(baseDir, this.code),
-                path.join(baseDir, this.cloud),
-                path.join(baseDir, this.lambda),
-                path.join(baseDir, this.webapp),
-                path.join(baseDir, this.test),
-                path.join(baseDir, this.dist)
-            ];
-
-            directories.forEach(function(element) {
-                try {
-                    fs.mkdirSync(element);
-                } catch (e) {
-                    if (e.code != 'EEXIST') throw e;
-                }
-            });
-        };
-
-    };
-    var Patterns = function(baseFolders) {
-
-        this.getAllPattern = function() {
-            return "/**/*";
-        };
-
-        this.getLambdaPattern = function(functionFolder, excludeTests) {
-            var path = functionFolder !== undefined ? functionFolder : baseFolders;
-
-            excludeTests = excludeTests !== undefined ? excludeTests : false;
-            var pattern = [
-                path + "/**/*",
-                "!" + path + "/**/node_modules/aws-sdk/**/*",   // exclude AWS SDK files (already included in lambda)
-                "!" + path + "/**/node_modules/aws-sdk",        // exclude AWS SDK folder
-                "!" + path + "/**/node_modules/**/*min.js",     // exclude minified version of libraries so can minify the rest
-                "!" + path + "/**/node_modules/**/*.map",       // exclude sourcemaps that are not relevant
-                "!" + path + "/**/*package.json"
-            ];
-            if (excludeTests) {
-                pattern = pattern.concat([
-                    "!" + path + "/test/**/*",                          // exclude test folder
-                    "!" + path + "/test",                          // exclude test folder
-                    "!" + path + "/**/test*.json",                    // exclude test events
-                    "!" + path + "/**/test*.js",                      // exclude test files
-                ]);
-            }
-            return pattern;
-        };
-        this.getTestsPattern = function() {
-            return baseFolders.lambda + "/**/*[S|s]pec.js"
-        };
-    };
+    this.config = {};
+    _.extend(this, new ValidatableObject());
+    _.merge(this.config, amityConfig);
+    this.config.projectPath = startPath;
 
 
     this.folders = new Folders();
-    this.patterns = new Patterns(this.folders.lambda);
+    this.patterns = new Patterns(this.folders);
 
-    this.init = function() {
+    this.managers = {
+        s3: require("./aws/managers/S3Manager"),
+        dynamo: require("./aws/managers/DynamoDBManager"),
+        sns: require("./aws/managers/SNSManager")
+    };
+
+    this.validateProjectConfig = function() {
+        return true;
+    };
+
+    this.collectConfigFiles = function() {
 
     };
 
     this.setupCloud = function() {
 
+    };
+
+    /**
+     * Initializes project folder or reads an existing one
+     * @param projectFolder     {string}        Path of the folder containing project files.
+     * @param options           {object}        Value object with initialization options.
+     * @param options.config    {AmityConfig}   Amity Configuration Object provided as parameter. It can override existing configs.
+     */
+    this.init = function(projectFolder, options) {
+        this.config.projectPath = projectFolder || this.config.projectPath;
+        options = options || {};
+        _.merge(this.config, options.config);
+
+        var promises = [];
+        promises.push(this.folders.setupProjectFolders(this.config.projectPath));
+
+        if (!this.validateProjectConfig()) throw this.errors;
+        promises.push(fs.writeFileAsync(path.join(this.config.projectPath, CONST.PROJECT_FILE), JSON.stringify(this.config), "utf8", function() {
+            console.log("Created project file.");
+        }));
+
+        return Promise.all(promises);
     };
 };
 

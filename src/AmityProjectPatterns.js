@@ -1,5 +1,10 @@
 "use strict";
+var Folders = require("./AmityProjectFolders");
 
+/**
+ * Object representing all te patterns required by Amity
+ * @param   baseFolders {AmityProjectFolders}
+ */
 var Patterns = function(baseFolders) {
 
     this.getAllPattern = function() {
@@ -7,7 +12,7 @@ var Patterns = function(baseFolders) {
     };
 
     this.getLambdaPattern = function(functionFolder, excludeTests) {
-        var path = functionFolder !== undefined ? functionFolder : baseFolders;
+        var path = functionFolder !== undefined ? functionFolder : baseFolders.lamba;
 
         excludeTests = excludeTests !== undefined ? excludeTests : false;
         var pattern = [
@@ -23,7 +28,7 @@ var Patterns = function(baseFolders) {
                 "!" + path + "/test/**/*",                          // exclude test folder
                 "!" + path + "/test",                          // exclude test folder
                 "!" + path + "/**/test*.json",                    // exclude test events
-                "!" + path + "/**/test*.js",                      // exclude test files
+                "!" + path + "/**/test*.js"                      // exclude test files
             ]);
         }
         return pattern;

@@ -1,4 +1,5 @@
 "use strict";
+var Promise = require("bluebird");
 
 describe("Amity.folders", function() {
     var Amity;
@@ -17,9 +18,11 @@ describe("Amity.folders", function() {
             it("to retrieve the names of functions in a lambda folder", function() {
                 var fixture = __dirname + "/fixtures/folders";
 
-                var names = amity.folders.getLambdaFunctions(fixture);
-                expect(names).toContain("nsp-test-func-01");
-                expect(names).toContain("nsp-test-func-02");
+                amity.folders.getLambdaFunctions(fixture)
+                    .then(function(names) {
+                        expect(names).toContain("nsp-test-func-01");
+                        expect(names).toContain("nsp-test-func-02");
+                    });
             });
 
             describe("to setup project folders", function() {
@@ -27,7 +30,7 @@ describe("Amity.folders", function() {
                 var rimraf = require("rimraf");
                 var basePath = __dirname + "/testFolderCreation";
 
-                beforeEach(function(){
+                beforeEach(function() {
                     try {
                         fs.mkdirSync(basePath);
                     } catch (e) {
@@ -35,18 +38,21 @@ describe("Amity.folders", function() {
                     }
                 });
 
-                it("within a base path", function(){
-                    amity.folders.setupProjectFolders(basePath);
-                    expect(fs.existsSync(basePath + "/" + amity.folders.code)).toBeTruthy();
-                    expect(fs.existsSync(basePath + "/" + amity.folders.cloud)).toBeTruthy();
-                    expect(fs.existsSync(basePath + "/" + amity.folders.dist)).toBeTruthy();
-                    expect(fs.existsSync(basePath + "/" + amity.folders.test)).toBeTruthy();
-                    expect(fs.existsSync(basePath + "/" + amity.folders.lambda)).toBeTruthy();
-                    expect(fs.existsSync(basePath + "/" + amity.folders.webapp)).toBeTruthy();
+                it("within a base path", function() {
+                    amity.folders.setupProjectFolders(basePath)
+                        .then(function() {
+                            expect(fs.existsSync(basePath + "/" + amity.folders.code)).toBeTruthy();
+                            expect(fs.existsSync(basePath + "/" + amity.folders.cloud)).toBeTruthy();
+                            expect(fs.existsSync(basePath + "/" + amity.folders.dist)).toBeTruthy();
+                            expect(fs.existsSync(basePath + "/" + amity.folders.test)).toBeTruthy();
+                            expect(fs.existsSync(basePath + "/" + amity.folders.lambda)).toBeTruthy();
+                            expect(fs.existsSync(basePath + "/" + amity.folders.webapp)).toBeTruthy();
+                        });
                 });
 
-                afterEach(function(){
-                    rimraf(basePath,{},function(){});
+                afterEach(function() {
+                    rimraf(basePath, {}, function() {
+                    });
                 });
             });
 
