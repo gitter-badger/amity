@@ -5,7 +5,7 @@ var fs = Promise.promisifyAll(require("fs"));
 var path = Promise.promisifyAll(require("path"));
 var AWS = require("aws-sdk");
 
-var ValidatableObject = require("./utils/ValidatableObject");
+var ValidatableObject = require("./utils/Validator");
 
 var Folders = require("./AmityProjectFolders");
 var Patterns = require("./AmityProjectPatterns");
