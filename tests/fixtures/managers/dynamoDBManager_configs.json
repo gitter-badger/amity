@@ -1,0 +1,6 @@
+{
+  "name": "jasmine-test-table",
+  "readThroughput": 2,
+  "writeThroughput": 1,
+  "region": "us-east-1"
+}

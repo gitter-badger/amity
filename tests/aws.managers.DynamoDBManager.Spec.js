@@ -11,8 +11,6 @@ var AWSPromise = require("../src/aws/AWSPromise");
 var CONST = {
     CURRENT_PATH: __dirname,
     FIXTURE_PATH: __dirname + "/fixtures",
-    READ_THROUGHPUT: 2,
-    WRITE_THROUGHPUT: 1
 };
 
 
@@ -20,26 +18,22 @@ describe("DynamoDBManager", function() {
     var DynamoDBManager = require("../src/aws/managers/DynamoDBManager");
     var DynamoDBTable = require("../src/aws/resources/DynamoDBTable");
 
-    var tableName;
+    var fixtureConfig;
     var expectedResponse;
     var dynamoMock;
 
     beforeEach(function() {
-        tableName = "jasmine-test-table";
-        expectedResponse = require(CONST.FIXTURE_PATH + "/managers/dynamoManagerResponse.json");
+        fixtureConfig = JSON.parse(fs.readFileSync(CONST.FIXTURE_PATH + "/managers/dynamoDBManager_configs.json"));
+
+        expectedResponse = require(CONST.FIXTURE_PATH + "/managers/dynamoDBManager_responses.json");
         dynamoMock = AWSPromise.promisifyClient(new AWS.DynamoDB({region: testRegion}));
     });
 
     function intializeTest() {
         return AWSUtils.getCurrentAwsAccountId()
             .then(function(accountId) {
-                    return new DynamoDBTable({
-                        name: tableName,
-                        awsAccountId: accountId,
-                        readThroughput: CONST.READ_THROUGHPUT,
-                        writeThroughput: CONST.WRITE_THROUGHPUT,
-                        region: testRegion
-                    })
+                    fixtureConfig.awsAccountId = accountId;
+                    return new DynamoDBTable(fixtureConfig)
                 }
             )
     }
@@ -48,8 +42,7 @@ describe("DynamoDBManager", function() {
 
         describe("exists", function() {
             beforeEach(function() {
-                tableName = "jasmine-test-table-" + (new Date().getTime());
-                expectedResponse = JSON.parse(fs.readFileSync(CONST.FIXTURE_PATH + "/managers/dynamoManagerResponse.json"))["describeTableOK"];
+                expectedResponse = JSON.parse(fs.readFileSync(CONST.FIXTURE_PATH + "/managers/dynamoDBManager_responses.json"))["describeTableOK"];
 
                 spyOn(dynamoMock, "describeTableAsync").andReturn(Promise.resolve(expectedResponse));
                 spyOn(dynamoMock, "updateTableAsync").andReturn(Promise.resolve());
@@ -60,7 +53,7 @@ describe("DynamoDBManager", function() {
             it("does nothing", function(done) {
                 intializeTest()
                     .then(function(table) {
-                        return DynamoDBManager.createResource(table, dynamoMock)
+                        return DynamoDBManager.createResource(fixtureConfig, dynamoMock)
                     })
                     .then(function() {
                         expect(dynamoMock.describeTableAsync).toHaveBeenCalled();
@@ -74,8 +67,7 @@ describe("DynamoDBManager", function() {
 
         describe("exists but has the wrong throughput", function() {
             beforeEach(function() {
-                tableName = "jasmine-test-table-" + (new Date().getTime());
-                expectedResponse = JSON.parse(fs.readFileSync(CONST.FIXTURE_PATH + "/managers/dynamoManagerResponse.json"))["describeTableThroughput"];
+                expectedResponse = JSON.parse(fs.readFileSync(CONST.FIXTURE_PATH + "/managers/dynamoDBManager_responses.json"))["describeTableThroughput"];
 
                 spyOn(dynamoMock, "describeTableAsync").andReturn(Promise.resolve(expectedResponse));
                 spyOn(dynamoMock, "updateTableAsync").andReturn(Promise.resolve());
@@ -86,7 +78,7 @@ describe("DynamoDBManager", function() {
             it("does nothing", function(done) {
                 intializeTest()
                     .then(function(table) {
-                        return DynamoDBManager.createResource(table, dynamoMock)
+                        return DynamoDBManager.createResource(fixtureConfig, dynamoMock)
                     })
                     .then(function() {
                         expect(dynamoMock.describeTableAsync).toHaveBeenCalled();
@@ -101,7 +93,7 @@ describe("DynamoDBManager", function() {
 
         describe("does not exist", function() {
             beforeEach(function() {
-                expectedResponse = JSON.parse(fs.readFileSync(CONST.FIXTURE_PATH + "/managers/dynamoManagerResponse.json"))["describeTableERROR"];
+                expectedResponse = JSON.parse(fs.readFileSync(CONST.FIXTURE_PATH + "/managers/dynamoDBManager_responses.json"))["describeTableERROR"];
 
                 spyOn(dynamoMock, "describeTableAsync").andReturn(Promise.reject(expectedResponse));
                 spyOn(dynamoMock, "updateTableAsync").andReturn(Promise.resolve());
@@ -112,7 +104,7 @@ describe("DynamoDBManager", function() {
             it("creates them", function(done) {
                 intializeTest()
                     .then(function(table) {
-                        return DynamoDBManager.createResource(table, dynamoMock)
+                        return DynamoDBManager.createResource(fixtureConfig, dynamoMock)
                     })
                     .then(function() {
                         expect(dynamoMock.describeTableAsync).toHaveBeenCalled();
@@ -128,7 +120,7 @@ describe("DynamoDBManager", function() {
 
     describe("deletes", function() {
         beforeEach(function() {
-            expectedResponse = JSON.parse(fs.readFileSync(CONST.FIXTURE_PATH + "/managers/dynamoManagerResponse.json"))["describeTableOK"];
+            expectedResponse = JSON.parse(fs.readFileSync(CONST.FIXTURE_PATH + "/managers/dynamoDBManager_responses.json"))["describeTableOK"];
 
             spyOn(dynamoMock, "describeTableAsync").andReturn(Promise.resolve(expectedResponse));
             spyOn(dynamoMock, "updateTableAsync").andReturn(Promise.resolve());
@@ -138,7 +130,7 @@ describe("DynamoDBManager", function() {
         it("existing resources", function(done) {
             intializeTest()
                 .then(function(table) {
-                    return DynamoDBManager.deleteResource(table, dynamoMock)
+                    return DynamoDBManager.deleteResource(fixtureConfig, dynamoMock)
                 })
                 .then(function() {
                     expect(dynamoMock.describeTableAsync).not.toHaveBeenCalled();
