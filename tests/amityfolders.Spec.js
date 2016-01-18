@@ -1,5 +1,6 @@
 "use strict";
 var Promise = require("bluebird");
+var del = require("del");
 
 describe("Amity.folders", function() {
     var Amity;
@@ -27,7 +28,6 @@ describe("Amity.folders", function() {
 
             describe("to setup project folders", function() {
                 var fs = require("fs");
-                var rimraf = require("rimraf");
                 var basePath = __dirname + "/testFolderCreation";
 
                 beforeEach(function() {
@@ -51,8 +51,7 @@ describe("Amity.folders", function() {
                 });
 
                 afterEach(function() {
-                    rimraf(basePath, {}, function() {
-                    });
+                    del(basePath);
                 });
             });
 

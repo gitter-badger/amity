@@ -2,7 +2,7 @@
 var Promise = require("bluebird");
 var fs = Promise.promisifyAll(require("fs"));
 var path = Promise.promisifyAll(require("path"));
-
+var mkdirp = require("mkdirp");
 /**
  * @typedef {object} AmityProjectFolders
  * @property    code    {string}    Code folder. Contains lambda and webapp code.
@@ -60,9 +60,18 @@ var Folders = function() {
         var promises = [];
         directories.forEach(function(element) {
             try {
-                promises.push(fs.mkdirAsync(element));
+                var promise = new Promise(function(resolve, reject) {
+                    mkdirp(element, function(err) {
+                        if (err) reject(err);
+                        else resolve();
+                    })
+                });
+                promises.push(promise);
             } catch (e) {
-                if (e.code != 'EEXIST') throw e;
+                if (e.code != 'EEXIST') {
+                    e.dir = element;
+                    throw e;
+                }
             }
         });
         return Promise.all(promises);
