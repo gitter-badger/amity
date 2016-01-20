@@ -1,3 +1,8 @@
+## DISCLAIMER
+###**This code is a work in progress is not production-ready. Use it at your own risk**##
+
+
+
 # Amity
 Amity aims to be a fast and straightforward tool to create AWS functions and resources. Written completely in Node.js it relies only on aws sdk for NodeJS, thus exposing allthe functionalities of the project manager tool to be invoked at runtime.
 
