@@ -1,0 +1,12 @@
+{
+  "operation": "noop",
+  "apiVersion": "1.0",
+  "body": {},
+  "identity": null,
+  "sort": null,
+  "fields": null,
+  "embed": null,
+  "startKey": "",
+  "offset": null,
+  "q": null
+}
