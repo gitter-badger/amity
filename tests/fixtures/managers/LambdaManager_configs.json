@@ -1,0 +1,5 @@
+{
+  "name":"TestLambdaManagerInit",
+  "timeout": 3,
+  "memorySize":128
+}

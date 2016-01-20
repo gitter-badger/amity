@@ -4,19 +4,20 @@ var fs = require("fs");
 
 var AWS = require("aws-sdk");
 var AWSUtils = require("../src/aws/AWSUtils");
-var testRegion = "us-east-1";
 var AWSPromise = require("../src/aws/AWSPromise");
 
 
 var CONST = {
+    MANAGERS_PATH_: "../src/aws/managers",
+    RESOURCES_PATH_: "../src/aws/resources",
     CURRENT_PATH: __dirname,
-    FIXTURE_PATH: __dirname + "/fixtures",
+    FIXTURE_PATH: __dirname + "/fixtures"
 };
 
 
 describe("DynamoDBManager", function() {
-    var DynamoDBManager = require("../src/aws/managers/DynamoDBManager");
-    var DynamoDBTable = require("../src/aws/resources/DynamoDBTable");
+    var DynamoDBManager = require(CONST.MANAGERS_PATH_+"/DynamoDBManager");
+    var DynamoDBTable = require(CONST.RESOURCES_PATH_+"/DynamoDBTable");
 
     var fixtureConfig;
     var expectedResponse;
@@ -26,7 +27,7 @@ describe("DynamoDBManager", function() {
         fixtureConfig = JSON.parse(fs.readFileSync(CONST.FIXTURE_PATH + "/managers/dynamoDBManager_configs.json"));
 
         expectedResponse = require(CONST.FIXTURE_PATH + "/managers/dynamoDBManager_responses.json");
-        dynamoMock = AWSPromise.promisifyClient(new AWS.DynamoDB({region: testRegion}));
+        dynamoMock = AWSPromise.promisifyClient(new AWS.DynamoDB({region: fixtureConfig.region}));
     });
 
     function intializeTest() {
