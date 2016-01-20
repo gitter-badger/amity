@@ -5,7 +5,7 @@ var fs = Promise.promisifyAll(require("fs"));
 var path = Promise.promisifyAll(require("path"));
 var AWS = require("aws-sdk");
 
-var ValidatableObject = require("./utils/Validator");
+var Validator = require("./utils/Validator");
 
 var Folders = require("./AmityProjectFolders");
 var Patterns = require("./AmityProjectPatterns");
@@ -18,21 +18,26 @@ var S3Manager = require("./aws/managers/S3Manager");
  * @module
  */
 
-var CONST = {
-    PROJECT_FILE: ".amity.project"
+var CONF = {
+    PROJECT_FILE: ".amity.project",
+    AWS_MANAGERS_PATH: "./aws/managers"
 };
 
 /**
  * Amity configuration object
  * @typedef     {object}        AmityConfig
- * @property    awsAccountId    {string}    AWS Account id to be used for operations and ARN construction. If not provided, defaults to AWS standard
- * @property    name            {string}    Project name. If not provided, it is detected from NPM paclage.json "name" attribute.
- * @property    version         {string}    Project version. If not provided, it is detected from NPM paclage.json "version" attribute.
- * @property    description     {string}    Project description. If not provided, it is detected from NPM paclage.json "description" attribute.
- * @property    resources       {object}    Collection of resources to be managed by Amity. It contains an entry for every AWS service with an array of object corresponding to resource configuration
+ * @property    awsAccountId    {string}                    AWS Account id to be used for operations and ARN construction. If not provided, defaults to AWS standard
+ * @property    name            {string}                    Project name. If not provided, it is detected from NPM paclage.json "name" attribute.
+ * @property    version         {string}                    Project version. If not provided, it is detected from NPM paclage.json "version" attribute.
+ * @property    description     {string}                    Project description. If not provided, it is detected from NPM paclage.json "description" attribute.
+ * @property    regions         {Array.<string>|string}     AWS Region of this table. Can be also an array of all the regions where this table should be replicated
+ * @property    resources       {object}                    Collection of resources to be managed by Amity. It contains an entry for every AWS service with an array of object corresponding to
+ *                                                          resource configuration
  * @property    resources.dynamodb  {Array.<DynamoDBTable>} Collection of DynamoDBTable representing tables to be created into AWS account
  * @property    resources.s3        {Array.<S3Bucket>}      Collection of S3Bucket representing buckets to be created into AWS account
  * @property    resources.sns       {Array.<S3Bucket>}      Collection of S3Bucket representing buckets to be created into AWS account
+ * @property    resources.lambda    {Array.<Lambda>}        Collection of Lambda objects representing lambda functions to be created into AWS account
+ * @property    resources.api       {Array.<APIEndpoint>}   Collection of APIEndpoint objects representing APIs to be created into AWS account
  */
 
 /**
@@ -42,7 +47,7 @@ var CONST = {
 var Amity = function(startPath, amityConfig) {
 
     this.config = {};
-    _.extend(this, new ValidatableObject());
+    _.extend(this, new Validator.Validatable());
     _.merge(this.config, amityConfig);
     this.config.projectPath = startPath;
 
@@ -51,9 +56,10 @@ var Amity = function(startPath, amityConfig) {
     this.patterns = new Patterns(this.folders);
 
     this.managers = {
-        s3: require("./aws/managers/S3Manager"),
-        dynamo: require("./aws/managers/DynamoDBManager"),
-        sns: require("./aws/managers/SNSManager")
+        s3: require(CONF.AWS_MANAGERS_PATH + "/S3Manager"),
+        dynamo: require(CONF.AWS_MANAGERS_PATH + "/DynamoDBManager"),
+        sns: require(CONF.AWS_MANAGERS_PATH + "/SNSManager"),
+        lambda: require(CONF.AWS_MANAGERS_PATH + "/LambdaManager")
     };
 
     this.validateProjectConfig = function() {
@@ -83,7 +89,7 @@ var Amity = function(startPath, amityConfig) {
         promises.push(this.folders.setupProjectFolders(this.config.projectPath));
 
         if (!this.validateProjectConfig()) throw this.errors;
-        promises.push(fs.writeFileAsync(path.join(this.config.projectPath, CONST.PROJECT_FILE), JSON.stringify(this.config), "utf8", function() {
+        promises.push(fs.writeFileAsync(path.join(this.config.projectPath, CONF.PROJECT_FILE), JSON.stringify(this.config), "utf8", function() {
             console.log("Created project file.");
         }));
 

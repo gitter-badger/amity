@@ -33,6 +33,5 @@ var GenericError = function(errorMessage, errorReference, messageParameters) {
 
 
 module.exports = {
-    GenericError: GenericError,
-    ValidationError: ValidationError
+    GenericError: GenericError
 };
