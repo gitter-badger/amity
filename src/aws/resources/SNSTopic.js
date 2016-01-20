@@ -9,7 +9,6 @@ var AWSResource = require("./AWSResource");
  * @typedef     {object}        SNSTopic
  * @property    awsAccountId    {string}                AWS Account id to be used for operations and ARN construction. If not provided, defaults to AWS standard
  * @property    region          {Array.<string>|string} AWS Region of this table. Can be also an array of all the regions where this table should be replicated
- * @property    topicName       {string}                Name of the SNS topic
  * @property    arn             {string}                ARN representing an SNS Topic
  *
  */
@@ -20,7 +19,7 @@ var AWSResource = require("./AWSResource");
  * @class
  */
 var SNSTopic = function(snsTopicConfig) {
-    snsTopicConfig.arnTemplate = "arn:aws:sns:${config.region}:${config.awsAccountId}:${config.topicName}";
+    snsTopicConfig.arnTemplate = "arn:aws:sns:${config.region}:${config.awsAccountId}:${config.name}";
     _.extend(this, new AWSResource(snsTopicConfig));
 
 };

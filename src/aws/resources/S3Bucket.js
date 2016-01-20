@@ -8,7 +8,6 @@ var AWSResource = require("./AWSResource");
  * @typedef     {object}        S3Bucket
  * @property    awsAccountId    {string}                AWS Account id to be used for operations and ARN construction. If not provided, defaults to AWS standard
  * @property    region          {Array.<string>|string} AWS Region of this table. Can be also an array of all the regions where this table should be replicated
- * @property    bucketName      {string}                Name of a bucket
  * @property    baseKey         {string}                Path prefix to be prepended to every object save/retrieved.
  * @property    arn             {sting}                 ARN representing a Bucket
  */
@@ -20,7 +19,7 @@ var AWSResource = require("./AWSResource");
  */
 var S3Bucket = function(s3BucketConfig) {
 
-    s3BucketConfig.arnTemplate = "arn:aws:s3:::${config.bucketName}/${config.baseKey}";
+    s3BucketConfig.arnTemplate = "arn:aws:s3:::${config.name}/${config.baseKey}";
     _.extend(this, new AWSResource(s3BucketConfig));
 };
 
