@@ -1,6 +1,8 @@
 ## DISCLAIMER
 ###**This code is a work in progress is not production-ready. Use it at your own risk**##
 
+![alt text](http://i.imgur.com/wNT3xT2.jpg "Amity")
+
 
 
 # Amity

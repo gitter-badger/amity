@@ -13,13 +13,13 @@ var APIIntegrationObject = function(apiEndpoint) {
 
         this.credentials = apiEndpoint.iamRole;
     this.requestTemplates =  {};
-    apiEndpoint.headers.forEach(function(element){
-
-    });
-        {{#each requestTemplates}}
-        "{{@key}}" : "{{this}}"{{#unless $last}},{{/unless}}
-        {{/each}}
-    },
+    for(var key in apiEndpoint.integration.requestTemplates) {
+        if(apiEndpoint.integration.requestTemplate.hasOwnProperty(key)) {
+            this.requestTemplates[key] = apiEndpoint.integration.requestTemplate[key];
+        }
+    }
+this.requestParameters = {};
+for(var key in this.methor)
     "requestParameters" : {
         {{#each headers}}
         "integration.request.header.{{this}}" : "method.request.header.{{this}}"{{#unless $last}},{{/unless}}
