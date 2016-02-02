@@ -9,7 +9,6 @@ var fs = require("fs");
 var path = require("path");
 var del = require("del");
 var jasmineNode = require("gulp-jasmine-node");
-var nodeInspector = require('gulp-node-inspector');
 
 var CONST = {
     testPattern: ["tests/**/*[S|s]pec.js"],
