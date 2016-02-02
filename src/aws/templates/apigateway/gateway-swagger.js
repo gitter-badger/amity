@@ -6,6 +6,7 @@ var _ = require("lodash");
  * @param apiEndpoint   {APIEndpoint}   Configuration object
  * @class
  */
+/*
 var APIIntegrationObject = function(apiEndpoint) {
     this.type = apiEndpoint.type;
     this.uri = apiEndpoint.arn,
@@ -51,3 +52,4 @@ for(var key in this.methor)
         }
     }
 }
+*/

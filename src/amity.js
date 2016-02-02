@@ -1,5 +1,11 @@
 "use strict";
 var _ = require("lodash");
+var winston = require('winston');
+var logger = new (winston.Logger)({
+    transports: [
+        new (winston.transports.Console)({timestamp: true, colorize: true})
+    ]
+});
 var Promise = require("bluebird");
 var fs = Promise.promisifyAll(require("fs"));
 var path = Promise.promisifyAll(require("path"));
@@ -10,9 +16,6 @@ var Validator = require("./utils/Validator");
 var Folders = require("./AmityProjectFolders");
 var Patterns = require("./AmityProjectPatterns");
 
-var DynamoDBManager = require("./aws/managers/DynamoDBManager");
-var S3Manager = require("./aws/managers/S3Manager");
-
 /**
  * Amity Serverless project management tool.
  * @module
@@ -20,7 +23,8 @@ var S3Manager = require("./aws/managers/S3Manager");
 
 var CONF = {
     PROJECT_FILE: ".amity.project",
-    AWS_MANAGERS_PATH: "./aws/managers"
+    AWS_MANAGERS_PATH: "./aws/managers",
+    PATTERN_AMITY_RESOURCES: "**/*.res.json"
 };
 
 /**
@@ -41,61 +45,138 @@ var CONF = {
  */
 
 /**
- *
+ * Amity Resource Manager abstract class
+ * @typedef     {object}    AmityResourceManager
+ * @property    {method}    deleteResource      Deletes a resource on AWS
+ * @property    {method}    createResource      Creates a resource on AWS
+ * @class
+ */
+
+/**
+ * Creates a new Amity object to handle serverless project configuration
+ * @param startPath     {string}        Path where project is located and amity should start work
+ * @param amityConfig   {AmityConfig}   Amity configuration object
  * @class
  */
 var Amity = function(startPath, amityConfig) {
 
-    this.config = {};
-    _.extend(this, new Validator.Validatable());
-    _.merge(this.config, amityConfig);
-    this.config.projectPath = startPath;
+        /** @type {AmityConfig} **/
+        this.config = {
+            resources: {
+                dynamodb: [],
+                s3: [],
+                sns: [],
+                iam: []
+            },
+            code: {
+                lambda: []
+            },
+            api: {
+                definitions: [],
+                models: []
+            }
+        };
+
+        _.extend(this, new Validator.Validatable());
+        _.merge(this.config, amityConfig);
+        this.config.projectPath = startPath;
 
 
-    this.folders = new Folders();
-    this.patterns = new Patterns(this.folders);
+        this.folders = new Folders();
+        this.patterns = new Patterns(this.folders);
 
-    this.managers = {
-        s3: require(CONF.AWS_MANAGERS_PATH + "/S3Manager"),
-        dynamo: require(CONF.AWS_MANAGERS_PATH + "/DynamoDBManager"),
-        sns: require(CONF.AWS_MANAGERS_PATH + "/SNSManager"),
-        lambda: require(CONF.AWS_MANAGERS_PATH + "/LambdaManager")
-    };
+        /**
+         * Configures a manager for each AWS service, to be able to handle resource configuration
+         * @type {object.<string,AmityResourceManager>}
+         */
+        this.managers = {
+            s3: require(CONF.AWS_MANAGERS_PATH + "/S3Manager"),
+            dynamo: require(CONF.AWS_MANAGERS_PATH + "/DynamoDBManager"),
+            sns: require(CONF.AWS_MANAGERS_PATH + "/SNSManager"),
+            lambda: require(CONF.AWS_MANAGERS_PATH + "/LambdaManager"),
+            apigateway: require(CONF.AWS_MANAGERS_PATH + "/APIGatewayManager")
+        };
 
-    this.validateProjectConfig = function() {
-        return true;
-    };
+        this.validateProjectConfig = function() {
+            return true;  //FIXME: remove this and set validation
+        };
 
-    this.collectConfigFiles = function() {
+        /**
+         * Collects every file ending with *.res.json and aggregates it into
+         * @param projectFolder     {string}        Path of the folder containing project files.
+         * @param options           {object}        Value object with initialization options.
+         * @returns {Promise}       A promise that handles this task
+         */
+        this.collectConfigFiles = function(projectFolder, options) {
+            var globby = require('globby');
+            projectFolder = projectFolder || this.config.projectPath;
+            options = options || {};
+            _.merge(this.config, options.config);
+            var _self = this;
 
-    };
+            var addConfigToResource = function(config, resourceName) {
+                if (!_.isEmpty(config)) {
+                    if (_.isArray(config) && config.length > 0) {
+                        _self.config.resources[resourceName] = _self.config.resources[resourceName].concat(config);
+                    } else if (_.isObject(config)) {
+                        _self.config.resources[resourceName].push(config);
+                    } else {
+                        throw new Error("Config Object " + JSON.stringify(config) + " is not valid");
+                    }
+                }
+            };
 
-    this.setupCloud = function() {
 
-    };
+            return globby(CONF.PATTERN_AMITY_RESOURCES)
+                .then(function(resourceFileNameArray) {
+                    resourceFileNameArray.forEach(function(resourceFileName) {
+                            logger.info("Processing resources file " + resourceFileName);
+                            // reads resource file into an obejct
+                            var resourceString = fs.readFileSync(resourceFileName);
+                            var resource = JSON.parse(resourceString);
+                            if (_.isObject(resource)) {
+                                for (var key in resource) {
+                                    if (resource.hasOwnProperty(key)) {
+                                        addConfigToResource(resource[key], key);
+                                    }
+                                }
+                            }
+                        }
+                    );
+                    return _self.config;
+                });
+        };
 
-    /**
-     * Initializes project folder or reads an existing one
-     * @param projectFolder     {string}        Path of the folder containing project files.
-     * @param options           {object}        Value object with initialization options.
-     * @param options.config    {AmityConfig}   Amity Configuration Object provided as parameter. It can override existing configs.
-     */
-    this.init = function(projectFolder, options) {
-        this.config.projectPath = projectFolder || this.config.projectPath;
-        options = options || {};
-        _.merge(this.config, options.config);
 
-        var promises = [];
-        promises.push(this.folders.setupProjectFolders(this.config.projectPath));
+        this.setupCloud = function() {
+            /** @type {DynamoDBManager} **/
+            var e = this.managers.dynamodb;
+        };
 
-        if (!this.validateProjectConfig()) throw this.errors;
-        promises.push(fs.writeFileAsync(path.join(this.config.projectPath, CONF.PROJECT_FILE), JSON.stringify(this.config), "utf8", function() {
-            console.log("Created project file.");
-        }));
+        /**
+         * Initializes project folder or reads an existing one
+         * @param projectFolder     {string}        Path of the folder containing project files.
+         * @param options           {object}        Value object with initialization options.
+         * @param options.config    {AmityConfig}   Amity Configuration Object provided as parameter. It can override existing configs.
+         * @returns {Promise}       A promise mapping all folders being set up
+         */
+        this.init = function(projectFolder, options) {
+            this.config.projectPath = projectFolder || this.config.projectPath;
+            options = options || {};
+            _.merge(this.config, options.config);
 
-        return Promise.all(promises);
-    };
-};
+            var promises = [];
+            promises.push(this.folders.setupProjectFolders(this.config.projectPath));
+
+            if (!this.validateProjectConfig()) throw this.errors;
+            promises.push(fs.writeFileAsync(path.join(this.config.projectPath, CONF.PROJECT_FILE), JSON.stringify(this.config), "utf8", function() {
+                logger.info("Created project file.");
+            }));
+
+            return Promise.all(promises);
+        };
+    }
+    ;
 
 Amity.version = "0.2.0";
 

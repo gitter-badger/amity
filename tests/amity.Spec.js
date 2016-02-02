@@ -89,6 +89,28 @@ describe("Amity", function() {
 
             });
         });
+        describe("collect resources descriptiors from files", function() {
+            var basePath = __dirname + CONST.FIXTURE_PATH + "/project/with_sub_folders";
+            var expected = JSON.parse(fs.readFileSync(path.join(__dirname + CONST.FIXTURE_PATH, "amityCollectFixture.json")));
+
+            it("filling resources in config file", function(done) {
+                amity.collectConfigFiles(basePath, null)
+                    .then(function(config) {
+                        var actual = amity.config.resources;
+                        for (var k in actual) {                                                 // loop on every service in resources
+                            if (actual.hasOwnProperty(k)) {
+                                expect(actual[k].length).toBe(expected.resources[k].length);    // tests have the same length
+                                expected.resources[k].forEach(function(element) {               // for each element of one of them
+                                    expect(actual[k]).toContain(element);                       // check it is contained in the other
+                                });                                                             // Implementing equality check without considering
+                                                                                                // element position
+
+                            }
+                        }
+                        done();
+                    });
+            });
+        });
     });
 
 });

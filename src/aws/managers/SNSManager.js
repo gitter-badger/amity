@@ -35,6 +35,9 @@ var SNSManager = function(options) {
     config = _.merge(config, options);
     var sns = new AWS.SNS({region: config.region});
 
+    /**
+     * Creates required cloud resources
+     */
     this.configureResources = function() {
         var topicName = config.topicArn.split(/[:]+/).pop();
 

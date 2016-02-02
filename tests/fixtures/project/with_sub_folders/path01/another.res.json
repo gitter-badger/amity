@@ -1,0 +1,11 @@
+{
+  "dynamodb": {
+    "name": "jasmine-another-table",
+    "readThroughput": 12,
+    "writeThroughput": 31,
+    "region": "us-east-1"
+  },
+  "s3": [],
+  "sns": [],
+  "iam": []
+}
