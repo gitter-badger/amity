@@ -9,10 +9,13 @@ var AWSPromise = require("../AWSPromise");
  * @module DynamoDBManager
  */
 
-
+/**
+ * @extends {AmityResourceManager}
+ * @type {AmityResourceManager}
+ */
 var DynamoDBManager = {};
 /**
- * Creates resources
+ * Creates DynamoDB tables
  * @param config    {DynamoDBTable} Table configuration object
  * @param client    {AWS.DynamoDB}  promisified DynamoClient
  */
